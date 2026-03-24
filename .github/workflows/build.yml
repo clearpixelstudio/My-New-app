@@ -1,0 +1,74 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install SDK platforms
+        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew || true
+
+      - name: Validate or generate Gradle wrapper
+        run: |
+          if [ ! -f gradlew ]; then
+            echo "gradlew not found, generating via wrapper task"
+            gradle wrapper --gradle-version 8.4
+            chmod +x gradlew
+          fi
+
+      - name: Generate signing keystore
+        run: |
+          keytool -genkeypair \
+            -alias "mykey" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -keystore app/keystore.jks \
+            -storepass "MyKeystorePassword123" \
+            -keypass "MyKeystorePassword123" \
+            -dname "CN=Fir testing, OU=App, O=APKForge, L=City, ST=State, C=US" \
+            -noprompt
+
+      - name: Build Release APK
+        env:
+          KEYSTORE_PATH: keystore.jks
+          KEYSTORE_PASSWORD: "MyKeystorePassword123"
+          KEY_ALIAS: "mykey"
+          KEY_PASSWORD: "MyKeystorePassword123"
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Locate APK
+        run: find . -name "*.apk" -type f | head -20
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-1.0.0
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/**/*.apk
+          retention-days: 30
+          if-no-files-found: warn

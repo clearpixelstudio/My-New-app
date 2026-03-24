@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Fir testing</string>
+    <string name="no_internet_title">No Internet Connection</string>
+    <string name="no_internet_msg">Please check your connection and try again.</string>
+    <string name="retry">Retry</string>
+    <string name="press_back_exit">Press back again to exit</string>
+    <string name="update_available">Update Available</string>
+    <string name="update_msg">A new version of this app is available. Please update to continue.</string>
+    <string name="update_now">Update Now</string>
+    <string name="later">Later</string>
+</resources>

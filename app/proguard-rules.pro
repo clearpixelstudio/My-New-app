@@ -1,0 +1,3 @@
+# Add project specific ProGuard rules here.
+-keep class androidx.webkit.** { *; }
+-keep class * extends android.webkit.WebViewClient { *; }
